@@ -4,7 +4,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from requests.auth import HTTPBasicAuth
 
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__,)
 CORS(app)
 
 CH_KEY = os.environ.get("COMPANIES_HOUSE_API_KEY")
