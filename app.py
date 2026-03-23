@@ -1,13 +1,17 @@
 import os
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from requests.auth import HTTPBasicAuth
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 CORS(app)
 
 CH_KEY = os.environ.get("COMPANIES_HOUSE_API_KEY")
+
+@app.route("/")
+def index():
+    return send_from_directory('.', 'index.html')
 
 @app.route("/api/psc")
 def psc():
