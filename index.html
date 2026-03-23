@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSC Verify</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1A1A2E;
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1rem 4rem;
+    color: white;
+  }
+
+  h1 {
+    font-size: clamp(1rem, 4vw, 1.6rem);
+    color: #FFD700;
+    text-shadow: 3px 3px 0 #7A6000;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .sub {
+    font-size: 0.4rem;
+    color: #888;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    line-height: 2;
+    letter-spacing: 0.1em;
+  }
+
+  .box {
+    width: 100%;
+    max-width: 600px;
+    background: #2A2A2A;
+    border: 4px solid #555;
+    border-right-color: #111;
+    border-bottom-color: #111;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .label {
+    font-size: 0.38rem;
+    color: #AAA;
+    margin-bottom: 0.5rem;
+    display: block;
+    letter-spacing: 0.08em;
+  }
+
+  input {
+    width: 100%;
+    background: #000;
+    border: 2px solid #333;
+    border-right-color: #666;
+    border-bottom-color: #666;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.42rem;
+    padding: 0.65rem 0.75rem;
+    outline: none;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  input:focus { border-color: #FFD700; }
+  input::placeholder { color: #444; }
+
+  button {
+    width: 100%;
+    background: #3A6A00;
+    border: 3px solid #5D9E2F;
+    border-right-color: #1A3A00;
+    border-bottom-color: #1A3A00;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    padding: 0.85rem;
+    cursor: pointer;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+  }
+
+  button:hover:not(:disabled) { background: #4A8A00; }
+  button:active:not(:disabled) { transform: translateY(2px); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .result { width: 100%; max-width: 600px; display: none; }
+  .result.active { display: block; }
+
+  .verdict-bar {
+    padding: 1rem 1.5rem;
+    border: 4px solid #555;
+    border-right-color: #111;
+    border-bottom-color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .verdict-bar.green { background: #1A4A00; border-top-color: #5D9E2F; }
+  .verdict-bar.amber { background: #4A3000; border-top-color: #FFAA00; }
+  .verdict-bar.red   { background: #4A0000; border-top-color: #FF4444; }
+  .verdict-bar .label { margin: 0; font-size: 0.42rem; color: white; }
+  .score { font-size: 0.9rem; color: #FFD700; text-shadow: 2px 2px 0 #7A6000; }
+
+  .result-body {
+    background: #2A2A2A;
+    border: 4px solid #555;
+    border-right-color: #111;
+    border-bottom-color: #111;
+    padding: 1.25rem;
+  }
+
+  .section { margin-bottom: 1.25rem; }
+
+  .section-head {
+    font-size: 0.38rem;
+    color: #FFD700;
+    letter-spacing: 0.1em;
+    border-bottom: 2px solid #444;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .body-text {
+    font-size: 0.38rem;
+    color: #CCC;
+    line-height: 2.2;
+    letter-spacing: 0.03em;
+  }
+
+  .flag {
+    font-size: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+    line-height: 2;
+    border-left: 4px solid;
+    background: #1A1A1A;
+    color: #DDD;
+    letter-spacing: 0.02em;
+  }
+
+  .flag.ok     { border-color: #5D9E2F; }
+  .flag.warning{ border-color: #FFAA00; }
+  .flag.issue  { border-color: #FF4444; }
+
+  .psc-card {
+    background: #1A1A1A;
+    border: 2px solid #444;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .psc-name { font-size: 0.42rem; color: white; margin-bottom: 0.4rem; }
+  .psc-detail { font-size: 0.32rem; color: #888; line-height: 2.2; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.28rem;
+    padding: 0.2rem 0.5rem;
+    margin: 0.2rem 0.2rem 0 0;
+    border: 1px solid #444;
+    color: #AAA;
+  }
+
+  .tag.ceased  { border-color: #FF4444; color: #FF4444; }
+  .tag.active  { border-color: #5D9E2F; color: #5D9E2F; }
+  .tag.control { border-color: #FFD700; color: #FFD700; }
+
+  .rec-box {
+    background: #1A1A00;
+    border: 2px solid #FFD700;
+    padding: 0.75rem;
+    font-size: 0.35rem;
+    color: #DDD;
+    line-height: 2.4;
+  }
+
+  .loading { display: none; text-align: center; padding: 2rem; font-size: 0.42rem; color: #888; letter-spacing: 0.1em; width: 100%; max-width: 600px; }
+  .loading.active { display: block; }
+
+  .pixel-loader { display: flex; justify-content: center; gap: 8px; margin-bottom: 1rem; }
+  .pixel-loader span { width: 12px; height: 12px; background: #FFD700; display: block; animation: blink 1s steps(1) infinite; }
+  .pixel-loader span:nth-child(2) { animation-delay: 0.25s; }
+  .pixel-loader span:nth-child(3) { animation-delay: 0.5s; }
+  .pixel-loader span:nth-child(4) { animation-delay: 0.75s; }
+
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+  .error { display: none; font-size: 0.38rem; color: #FF4444; text-align: center; padding: 1rem; width: 100%; max-width: 600px; background: #2A0000; border: 2px solid #FF4444; line-height: 2; }
+  .error.active { display: block; }
+
+  footer { margin-top: 2rem; font-size: 0.32rem; color: #444; text-align: center; line-height: 2.5; letter-spacing: 0.05em; }
+</style>
+</head>
+<body>
+
+<h1>PSC VERIFY</h1>
+<p class="sub">COMPANIES HOUSE INTELLIGENCE · BY DANIAL SHAH · LVL 3 PT</p>
+
+<div class="box">
+  <span class="label">► COMPANY NAME OR NUMBER</span>
+  <input type="text" id="companyInput" placeholder="e.g. 00445790" />
+
+  <span class="label">► ANTHROPIC API KEY</span>
+  <input type="password" id="claudeKey" placeholder="Your Claude API key" />
+
+  <button id="searchBtn" onclick="runCheck()">[ VERIFY PSC REGISTER ]</button>
+</div>
+
+<div class="loading" id="loading">
+  <div class="pixel-loader"><span></span><span></span><span></span><span></span></div>
+  <span id="loadingText">LOADING...</span>
+</div>
+
+<div class="error" id="errorMsg"></div>
+<div class="result" id="result"></div>
+
+<footer>DATA: COMPANIES HOUSE PUBLIC REGISTER · NOT LEGAL ADVICE · ALPHA v0.1</footer>
+
+<script>
+async function runCheck() {
+  const query = document.getElementById('companyInput').value.trim();
+  const claudeKey = document.getElementById('claudeKey').value.trim();
+  if (!query || !claudeKey) return alert('Fill in company name and API key.');
+
+  setLoading(true); clearResult();
+
+  try {
+    setLoadingText('FETCHING PSC REGISTER...');
+    const backendRes = await fetch(
+      `https://pscverify.onrender.com/api/psc?company_number=${encodeURIComponent(query)}`
+    );
+    if (!backendRes.ok) throw new Error('BACKEND ERROR — IS REPLIT RUNNING?');
+    const backendData = await backendRes.json();
+    if (backendData.error) throw new Error(backendData.error.toUpperCase());
+
+    const profileData = backendData.company_profile || {};
+    const pscData = backendData.psc_register || { items: [] };
+    const filingData = backendData.filing_history || { items: [] };
+
+    setLoadingText('AI ANALYSIS IN PROGRESS...');
+    const prompt = `You are a UK corporate compliance expert. Analyse this Companies House PSC data. Return ONLY valid JSON, no markdown, no preamble.
+
+COMPANY: ${JSON.stringify(profileData)}
+PSC REGISTER: ${JSON.stringify(pscData)}
+CONFIRMATION STATEMENTS: ${JSON.stringify(filingData)}
+
+Return this exact structure:
+{"verdict":"GREEN|AMBER|RED","score":0-100,"company_name":"string","company_number":"string","company_status":"string","incorporated":"string","psc_count":0,"summary":"2-3 sentences","flags":[{"type":"ok|warning|issue","text":"finding"}],"pscs":[{"name":"string","nature_of_control":["string"],"notified_on":"string","nationality":"string","ceased":false}],"recommendation":"plain English next steps"}
+
+Flag: missing PSCs, stale confirmation statements, ceased PSCs, corporate chains obscuring ownership, exemptions claimed. GREEN=clean. AMBER=minor concerns. RED=significant issues.`;
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+
+    if (!claudeRes.ok) throw new Error('AI ERROR — CHECK ANTHROPIC KEY');
+    const claudeData = await claudeRes.json();
+    const r = JSON.parse(claudeData.content[0].text.replace(/```json|```/g, '').trim());
+    renderResult(r);
+
+  } catch(e) {
+    showError(e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderResult(r) {
+  const el = document.getElementById('result');
+  const c = r.verdict === 'GREEN' ? 'green' : r.verdict === 'AMBER' ? 'amber' : 'red';
+  const label = r.verdict === 'GREEN' ? '✓ REGISTER CLEAN' : r.verdict === 'AMBER' ? '⚠ MINOR CONCERNS' : '✕ ISSUES FOUND';
+
+  const flags = (r.flags||[]).map(f =>
+    `<div class="flag ${f.type}">${f.type==='ok'?'✓':f.type==='warning'?'⚠':'✕'} ${f.text}</div>`
+  ).join('');
+
+  const pscs = (r.pscs||[]).map(p => `
+    <div class="psc-card">
+      <div class="psc-name">${p.name}</div>
+      <div class="psc-detail">NOTIFIED: ${p.notified_on||'UNKNOWN'}${p.nationality?' · '+p.nationality.toUpperCase():''}</div>
+      <div style="margin-top:0.4rem">
+        ${(p.nature_of_control||[]).map(c=>`<span class="tag control">${c.replace(/-/g,' ').toUpperCase()}</span>`).join('')}
+        <span class="tag ${p.ceased?'ceased':'active'}">${p.ceased?'CEASED':'ACTIVE'}</span>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="verdict-bar ${c}">
+      <span class="label">${label} · ${r.company_name}</span>
+      <span class="score">${r.score}/100</span>
+    </div>
+    <div class="result-body">
+      <div class="section"><div class="section-head">► SUMMARY</div><p class="body-text">${r.summary}</p></div>
+      ${flags?`<div class="section"><div class="section-head">► FLAGS</div>${flags}</div>`:''}
+      ${pscs?`<div class="section"><div class="section-head">► PSC REGISTER (${r.psc_count})</div>${pscs}</div>`:''}
+      <div class="section"><div class="section-head">► RECOMMENDATION</div><div class="rec-box">${r.recommendation}</div></div>
+    </div>`;
+  el.classList.add('active');
+}
+
+function setLoading(on) { document.getElementById('loading').classList.toggle('active',on); document.getElementById('searchBtn').disabled=on; }
+function setLoadingText(t) { document.getElementById('loadingText').textContent=t; }
+function clearResult() { const r=document.getElementById('result'); r.classList.remove('active'); r.innerHTML=''; document.getElementById('errorMsg').classList.remove('active'); }
+function showError(msg) { const e=document.getElementById('errorMsg'); e.textContent='✕ '+msg; e.classList.add('active'); }
+document.addEventListener('keydown', e => { if(e.key==='Enter') runCheck(); });
+</script>
+</body>
+</html>
